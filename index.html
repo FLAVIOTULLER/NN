@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NN — Neural Network Playground & Visualizer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="brand">
+        <div class="logo-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="5" cy="6" r="3" />
+            <circle cx="5" cy="18" r="3" />
+            <circle cx="19" cy="12" r="3" />
+            <path d="M8 6h3l5 6m-5 0l-5 6h3" />
+          </svg>
+        </div>
+        <div>
+          <h1>NN <span class="badge">Engine</span></h1>
+          <p class="subtitle">Visualizador & Simulador Interativo de Rede Neural em Tempo Real</p>
+        </div>
+      </div>
+      <div class="header-stats">
+        <div class="stat-card">
+          <span class="stat-label">Época</span>
+          <span class="stat-value" id="epoch-count">0</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">Loss Médio</span>
+          <span class="stat-value text-accent" id="loss-value">0.0000</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Grid -->
+    <main class="main-layout">
+      <!-- Sidebar Controls -->
+      <aside class="sidebar-panel">
+        <div class="panel-section">
+          <h3>🎮 Controles de Treino</h3>
+          <div class="btn-group">
+            <button id="btn-toggle-train" class="btn btn-primary">
+              <span class="icon">▶</span> <span id="btn-toggle-text">Iniciar</span>
+            </button>
+            <button id="btn-step" class="btn btn-secondary" title="Executar 1 Época">
+              <span class="icon">⏭</span> Passo
+            </button>
+            <button id="btn-reset" class="btn btn-danger" title="Reiniciar Pesos">
+              <span class="icon">↺</span> Resetar
+            </button>
+          </div>
+        </div>
+
+        <div class="panel-section">
+          <h3>📊 Dataset</h3>
+          <div class="dataset-selector" id="dataset-selector">
+            <button class="dataset-btn active" data-dataset="xor">XOR</button>
+            <button class="dataset-btn" data-dataset="circle">Círculos</button>
+            <button class="dataset-btn" data-dataset="moons">Duas Luas</button>
+            <button class="dataset-btn" data-dataset="spiral">Espiral</button>
+          </div>
+        </div>
+
+        <div class="panel-section">
+          <h3>⚙️ Hiperparâmetros</h3>
+          <div class="param-group">
+            <label for="learning-rate">Taxa de Aprendizado (LR): <span id="lr-val">0.15</span></label>
+            <input type="range" id="learning-rate" min="0.01" max="0.5" step="0.01" value="0.15">
+          </div>
+          <div class="param-group">
+            <label for="activation-select">Ativação Oculta:</label>
+            <select id="activation-select" class="custom-select">
+              <option value="tanh" selected>Tanh (Tangente Hiperbólica)</option>
+              <option value="sigmoid">Sigmoid</option>
+              <option value="relu">ReLU</option>
+            </select>
+          </div>
+          <div class="param-group">
+            <label for="noise-slider">Ruído dos Dados: <span id="noise-val">0.05</span></label>
+            <input type="range" id="noise-slider" min="0" max="0.25" step="0.01" value="0.05">
+          </div>
+        </div>
+
+        <div class="panel-section">
+          <h3>🏗️ Arquitetura da Rede</h3>
+          <div class="arch-controls">
+            <span class="arch-tag">Entradas: 2</span>
+            <span class="arch-tag" id="hidden-layers-tag">Camadas: [4, 4]</span>
+            <span class="arch-tag">Saída: 1</span>
+          </div>
+          <div class="layer-buttons">
+            <button id="btn-add-layer" class="btn btn-small">+ Camada</button>
+            <button id="btn-remove-layer" class="btn btn-small">- Camada</button>
+            <button id="btn-add-neuron" class="btn btn-small">+ Neurônio</button>
+            <button id="btn-remove-neuron" class="btn btn-small">- Neurônio</button>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Center Views -->
+      <section class="visualizer-content">
+        <!-- Visualizer Top: Network Architecture Graph & Heatmap -->
+        <div class="canvas-row">
+          <!-- Decision Boundary Heatmap -->
+          <div class="card canvas-card">
+            <div class="card-header">
+              <h4>🎯 Superfície de Decisão 2D</h4>
+              <div class="legend">
+                <span class="dot class-0"></span> Classe A
+                <span class="dot class-1"></span> Classe B
+              </div>
+            </div>
+            <div class="canvas-wrapper">
+              <canvas id="boundaryCanvas" width="400" height="400"></canvas>
+            </div>
+          </div>
+
+          <!-- Neural Network Graph -->
+          <div class="card canvas-card">
+            <div class="card-header">
+              <h4>🕸️ Topologia & Pesos Conectados</h4>
+              <div class="legend">
+                <span class="dot line-pos"></span> Peso Positivo (+)
+                <span class="dot line-neg"></span> Peso Negativo (-)
+              </div>
+            </div>
+            <div class="canvas-wrapper">
+              <canvas id="networkCanvas" width="480" height="400"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Visualizer Bottom: Loss Convergence Graph -->
+        <div class="card chart-card">
+          <div class="card-header">
+            <h4>📈 Curva de Convergência (Loss / Erro ao Longo do Tempo)</h4>
+            <span class="chart-status" id="chart-status">Em tempo real</span>
+          </div>
+          <div class="chart-wrapper">
+            <canvas id="lossCanvas" width="900" height="150"></canvas>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      <p>Projeto <strong>NN</strong> — Desenvolvido com HTML5 Canvas & Javascript Puro sem dependências externas.</p>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
